@@ -1,0 +1,54 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gke-cloud-sql-quickstart
+spec:
+  selector:
+    matchLabels:
+      app: gke-cloud-sql-app
+  template:
+    metadata:
+      labels:
+        app: gke-cloud-sql-app
+    spec:
+      serviceAccountName: ksa-cloud-sql
+      containers:
+      - name: gke-cloud-sql-app
+        image: europe-west1-docker.pkg.dev/celtic-surface-339114/gke-cloud-sql-repo/gke-sql:latest
+        # This app listens on port 8080 for web traffic by default.
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: DB_HOST
+          value: "127.0.0.1"
+        - name: DB_PORT
+          value: "5432"  
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: gke-cloud-psql-secrets
+              key: username
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: gke-cloud-psql-secrets
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: gke-cloud-psql-secrets
+              key: database
+      - name: cloud-sql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy:latest
+        command:
+          - "/cloud_sql_proxy"
+          - "-ip_address_types=private"
+          - "-instances=celtic-surface-339114:europe-west1:demo-postgresql=tcp:5432"
+          #securitycontext:
+          # the default cloud sql proxy image runs as the
+          # "nonroot" user and group (uid: 65532) by default.
+          #runasnonroot: true
+          # [end cloud_sql_postgres_sqlalchemy_gke_quickstart_deployment]

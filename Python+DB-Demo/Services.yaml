@@ -1,0 +1,14 @@
+
+# create an external HTTP load balancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: gke-cloud-sql-app
+spec:
+  type: LoadBalancer
+  selector:
+    app: gke-cloud-sql-app
+  ports:
+  - port: 80
+    targetPort: 8080
+# [END cloud_sql_postgres_sqlalchemy_gke_quickstart_service]
